@@ -4,6 +4,9 @@
 #include <set>
 #include <queue>
 #include <cassert>
+#include <cpr/cpr.h>
+
+#define DEBUG
 
 class Crawler {
 private:
@@ -34,22 +37,27 @@ private:
         return page_ranks.count(url) == 0;
     }
 
-    auto get_html(const std::string_view &url) {
-        // TODO: use libcurl
+    static std::string get_html(const std::string_view &url) {
+        cpr::Response r = cpr::Get(cpr::Url{static_cast<std::string>(url)});
+        return r.text;
     }
 
-    auto get_hyperlinks(auto html) {
+    auto get_hyperlinks(const std::string &html) {
         // TODO: parse html, get <a> tags
         std::vector<std::string_view> hyperlinks;
-        for (const auto &tag : html.find_all("a")) {
+#ifdef DEBUG
+        std::string line = "____________________________";
+        std::cout << line << "\n" << html << line << "\n";
+#endif
+        /*for (const auto &tag : html.find_all("a")) {
             hyperlinks.push_back(tag.content);
-        }
+        }*/
         return hyperlinks;
     }
 
     // add the content of newly found page url
     void add_hyperlinks(const std::string_view &root_url) {
-        auto html = get_html(root_url);
+        std::string html = get_html(root_url);
         std::vector<std::string_view> hyperlinks = get_hyperlinks(html);
         for (const auto &url : hyperlinks) {
             if (is_url_new(url)) {
@@ -103,8 +111,10 @@ public:
     }
 };
 
-
 int main() {
+#ifdef DEBUG
+    freopen("../html.out", "w", stdout);
+#endif
     std::string_view example_url("https://www.chess.com/");
     Crawler crawler;
     crawler.add_url(example_url);
