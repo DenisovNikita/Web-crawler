@@ -3,6 +3,7 @@
 #include <map>
 #include <set>
 #include <queue>
+#include <cassert>
 
 class Crawler {
 private:
@@ -11,15 +12,41 @@ private:
     // get top five
     std::set<std::pair<int, std::string_view>, std::greater<>> top_ranks;
     // calc ranks
-    std::map<std::string_view, int> page_rank;
+    std::map<std::string_view, int> page_ranks;
     // queue for yet unvisited urls
     std::queue<std::string_view> holder;
+    
+    void add_new_url(const std::string_view &url) {
+        holder.push(url);
+        assert(page_ranks.count(url) == 0);
+        page_ranks[url] = 0;
+    }
+
+    void increase_rank(const std::string_view &url) {
+        if (page_ranks.count(url)) {
+            top_ranks.erase(std::pair{page_ranks[url], url});
+        }
+        page_ranks[url]++;
+        top_ranks.insert(std::pair{page_ranks[url], url});
+    }
+
+    bool is_url_new(const std::string_view &url) {
+        return page_ranks.count(url) == 0;
+    }
 
     // add the content of newly found page url
-    void add_hyperlinks(const std::string_view &url) {
-        // get html from url
+    void add_hyperlinks(const std::string_view &root_url) {
+        // get html from root_url
+        auto html = get_html(root_url);
         // get hyperlinks from html
+        std::vector<std::string_view> hyperlinks = get_hyperlinks(html);
         // add new urls into holder
+        for (const auto &url : hyperlinks) {
+            if (is_url_new(url)) {
+                add_new_url(url);
+            }
+            increase_rank(url);
+        }
     }
 
     void visit_new_urls() {
@@ -34,8 +61,10 @@ public:
     // add newly found page url
     // O(recursive hyperlinks)
     void add_url(const std::string_view &root_url) {
-        holder.push(root_url);
-        visit_new_urls();
+        if (is_url_new(root_url)) {
+            add_new_url(root_url);
+            visit_new_urls();
+        }
     }
 
     // return top 5 most important pages
@@ -54,8 +83,8 @@ public:
     // O(log(urls))
     [[nodiscard]] std::vector<std::string_view> query_list_of_pages_with_given_prefix(
             const std::string_view &prefix) const {
-        auto lower_it = page_rank.lower_bound(prefix);
-        auto upper_it = page_rank.upper_bound(prefix);
+        auto lower_it = page_ranks.lower_bound(prefix);
+        auto upper_it = page_ranks.upper_bound(prefix);
         std::vector<std::string_view> result;
         for (auto it = lower_it; it != upper_it; it++) {
             result.push_back(it->first);
