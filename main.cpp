@@ -34,13 +34,23 @@ private:
         return page_ranks.count(url) == 0;
     }
 
+    auto get_html(const std::string_view &url) {
+        // TODO: use libcurl
+    }
+
+    auto get_hyperlinks(auto html) {
+        // TODO: parse html, get <a> tags
+        std::vector<std::string_view> hyperlinks;
+        for (const auto &tag : html.find_all("a")) {
+            hyperlinks.push_back(tag.content);
+        }
+        return hyperlinks;
+    }
+
     // add the content of newly found page url
     void add_hyperlinks(const std::string_view &root_url) {
-        // get html from root_url
         auto html = get_html(root_url);
-        // get hyperlinks from html
         std::vector<std::string_view> hyperlinks = get_hyperlinks(html);
-        // add new urls into holder
         for (const auto &url : hyperlinks) {
             if (is_url_new(url)) {
                 add_new_url(url);
