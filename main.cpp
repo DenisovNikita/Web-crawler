@@ -10,6 +10,9 @@
 
 class Crawler {
 private:
+#ifdef DEBUG
+    std::string line = "____________________________\n";
+#endif
     const int TOP = 5;
 
     // get top five
@@ -43,13 +46,12 @@ private:
     }
 
     auto get_hyperlinks(const std::string &html) {
-        // TODO: parse html, get <a> tags
+        // TODO: parse html, get href's tags
         std::vector<std::string_view> hyperlinks;
 #ifdef DEBUG
-        std::string line = "____________________________";
         std::cout << line << "\n" << html << line << "\n";
 #endif
-        /*for (const auto &tag : html.find_all("a")) {
+        /*for (const auto &tag : html.find_all("href")) {
             hyperlinks.push_back(tag.content);
         }*/
         return hyperlinks;
